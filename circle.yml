@@ -1,28 +1,43 @@
 
-machine:
-  pre:
-    - curl -sSL https://s3.amazonaws.com/circle-downloads/install-circleci-docker.sh | bash -s -- 1.10.0
-  services:
-    - docker
-  environment:
-    DOCKER_API_VERSION: '1.22'
+version: 2
+executorType: machine
 
-general:
-  branches:
-    ignore: [gh-pages]
+containerInfo:
+  - image: 'docker:1.13-git'
 
-dependencies:
-  override: [script/ci-deps]
-  cache_directories: [vendor]
+stages:
+  build:
+    workDir: ~/dobi
+    steps:
+      - type: checkout
+      - type: shell
+        shell: /bin/sh
+        command: 'docker version'
+      # TODO: load cache
+      - type: shell
+        shell: /bin/sh
+        command: 'script/ci-deps'
+      - type: shell
+        shell: /bin/sh
+      # TODO: parallel
+        command: 'script/ci-run'
 
-test:
-  override:
-    - script/ci-run:
-        parallel: true
+#general:
+#  branches:
+#    ignore: [gh-pages]
 
-deployment:
-  release:
-    tag: /v[0-9]+(\.[0-9]+)*/
-    commands:
-      - 'docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS'
-      - 'DOBI_EXEC_ID=release circle/dobi release'
+#dependencies:
+#  override: [script/ci-deps]
+#  cache_directories: [vendor]
+
+#test:
+#  override:
+#    - script/ci-run:
+#        parallel: true
+#
+#deployment:
+#  release:
+#    tag: /v[0-9]+(\.[0-9]+)*/
+#    commands:
+#      - 'docker login -e $DOCKER_EMAIL -u $DOCKER_USER -p $DOCKER_PASS'
+#      - 'DOBI_EXEC_ID=release circle/dobi release'
